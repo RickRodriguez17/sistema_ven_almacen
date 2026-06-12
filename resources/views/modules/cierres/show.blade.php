@@ -7,6 +7,9 @@
   <div class="pagetitle d-flex justify-content-between align-items-center">
     <h1>{{ $titulo }}</h1>
     <div>
+      @if($cierre->estaAbierto())
+        <span class="badge bg-warning text-dark fs-6 me-2"><i class="bi bi-broadcast"></i> En tiempo real</span>
+      @endif
       @if(auth()->user()->puedeImprimirReportes() && $cierre->estado === 'cerrado')
         <a href="{{ route('cierres.pdf', $cierre->id) }}" target="_blank" class="btn btn-outline-primary">
           <i class="bi bi-printer"></i> Imprimir PDF

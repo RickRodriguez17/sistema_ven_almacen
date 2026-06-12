@@ -37,7 +37,7 @@
 
               <ul class="list-unstyled mb-2 small mt-2">
                 @foreach($p->detalles as $d)
-                  <li>{{ $d->cantidad }}× {{ $d->combo_id ? '🌟 ' : '' }}{{ $d->producto?->nombre ?? $d->combo?->nombre ?? '—' }} <span class="text-muted">({{ $negocio['moneda'] }} {{ number_format($d->subtotal, 2) }})</span></li>
+                  <li>{{ $d->cantidad }}× {{ $d->combo_id ? '🌟 ' : '' }}{{ $d->producto?->nombre ?? $d->combo?->nombre ?? ($d->nombre_libre ? '[Libre] '.$d->nombre_libre : '—') }} <span class="text-muted">({{ $negocio['moneda'] }} {{ number_format($d->subtotal, 2) }})</span></li>
                 @endforeach
               </ul>
 

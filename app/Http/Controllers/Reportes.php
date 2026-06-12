@@ -94,21 +94,22 @@ class Reportes extends Controller
         $categoriaId = $request->input('categoria_id');
 
         $query = DB::table('detalle_venta')
-            ->join('productos', 'productos.id', '=', 'detalle_venta.producto_id')
             ->join('ventas', 'ventas.id', '=', 'detalle_venta.venta_id')
+            ->leftJoin('productos', 'productos.id', '=', 'detalle_venta.producto_id')
             ->leftJoin('categorias', 'categorias.id', '=', 'productos.categoria_id')
             ->whereBetween('ventas.created_at', [
                 $desde.' 00:00:00',
                 $hasta.' 23:59:59',
             ])
+            ->where('ventas.estado', '!=', 'anulada')
             ->select(
-                'productos.id',
-                'productos.nombre',
-                'categorias.nombre as categoria',
+                DB::raw('COALESCE(productos.id, 0) as id'),
+                DB::raw("COALESCE(productos.nombre, detalle_venta.nombre_libre, 'Producto libre') as nombre"),
+                DB::raw("COALESCE(categorias.nombre, IF(detalle_venta.nombre_libre IS NOT NULL, 'Venta Libre', NULL)) as categoria"),
                 DB::raw('SUM(detalle_venta.cantidad) as total_unidades'),
                 DB::raw('SUM(detalle_venta.subtotal) as total_ingreso')
             )
-            ->groupBy('productos.id', 'productos.nombre', 'categorias.nombre')
+            ->groupBy('id', 'nombre', 'categoria')
             ->orderByDesc('total_unidades');
 
         if ($categoriaId) {
@@ -182,6 +183,15 @@ class Reportes extends Controller
 
         $cierres = $query->get();
 
+        foreach ($cierres as $c) {
+            if ($c->estaAbierto()) {
+                $resumen = $c->calcularResumenEnVivo();
+                $c->total_ventas = $resumen['total_ventas'];
+                $c->cantidad_ventas = $resumen['cantidad_ventas'];
+                $c->total_gastos = $resumen['total_gastos'];
+            }
+        }
+
         return view('modules.reportes.cierres', [
             'titulo' => 'Historial de cierres',
             'desde' => $desde,
@@ -245,20 +255,21 @@ class Reportes extends Controller
                 $desde = $request->input('desde', now()->subDays(30)->toDateString());
                 $hasta = $request->input('hasta', now()->toDateString());
                 $productos = DB::table('detalle_venta')
-                    ->join('productos', 'productos.id', '=', 'detalle_venta.producto_id')
                     ->join('ventas', 'ventas.id', '=', 'detalle_venta.venta_id')
+                    ->leftJoin('productos', 'productos.id', '=', 'detalle_venta.producto_id')
                     ->leftJoin('categorias', 'categorias.id', '=', 'productos.categoria_id')
                     ->whereBetween('ventas.created_at', [
                         $desde.' 00:00:00',
                         $hasta.' 23:59:59',
                     ])
+                    ->where('ventas.estado', '!=', 'anulada')
                     ->select(
-                        'productos.nombre',
-                        'categorias.nombre as categoria',
+                        DB::raw("COALESCE(productos.nombre, detalle_venta.nombre_libre, 'Producto libre') as nombre"),
+                        DB::raw("COALESCE(categorias.nombre, IF(detalle_venta.nombre_libre IS NOT NULL, 'Venta Libre', NULL)) as categoria"),
                         DB::raw('SUM(detalle_venta.cantidad) as total_unidades'),
                         DB::raw('SUM(detalle_venta.subtotal) as total_ingreso')
                     )
-                    ->groupBy('productos.id', 'productos.nombre', 'categorias.nombre')
+                    ->groupBy('nombre', 'categoria')
                     ->orderByDesc('total_unidades')
                     ->get();
                 $data += [

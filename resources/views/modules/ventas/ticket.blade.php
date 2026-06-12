@@ -59,7 +59,7 @@
 
     @foreach($venta->detalles as $d)
       @php
-        $nom = $d->combo_id ? '[COMBO] '.$d->combo?->nombre : $d->producto?->nombre;
+        $nom = $d->combo_id ? '[COMBO] '.$d->combo?->nombre : ($d->producto?->nombre ?? ($d->nombre_libre ? '[LIBRE] '.$d->nombre_libre : '—'));
       @endphp
       <div class="item-cocina">
         <span class="qty-box">{{ $d->cantidad }}</span>

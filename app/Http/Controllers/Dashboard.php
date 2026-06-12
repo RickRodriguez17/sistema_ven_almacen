@@ -34,11 +34,17 @@ class Dashboard extends Controller
             ->get();
 
         $topProductos = DB::table('detalle_venta')
-            ->join('productos', 'productos.id', '=', 'detalle_venta.producto_id')
-            ->select('productos.nombre', DB::raw('SUM(detalle_venta.cantidad) as total_vendido'), DB::raw('SUM(detalle_venta.subtotal) as total_ingreso'))
-            ->groupBy('productos.id', 'productos.nombre')
+            ->join('ventas', 'ventas.id', '=', 'detalle_venta.venta_id')
+            ->leftJoin('productos', 'productos.id', '=', 'detalle_venta.producto_id')
+            ->whereDate('ventas.created_at', today())
+            ->where('ventas.estado', '!=', 'anulada')
+            ->select(
+                DB::raw("COALESCE(productos.nombre, detalle_venta.nombre_libre, 'Producto') as nombre"),
+                DB::raw('SUM(detalle_venta.cantidad) as total_vendido'),
+                DB::raw('SUM(detalle_venta.subtotal) as total_ingreso')
+            )
+            ->groupBy('nombre')
             ->orderByDesc('total_vendido')
-            ->limit(5)
             ->get();
 
         $ventasUltimos7Dias = Venta::selectRaw('date(created_at) as fecha, SUM(total_venta) as total')

@@ -21,6 +21,7 @@ class DetalleVenta extends Model
         'precio_unitario',
         'subtotal',
         'notas',
+        'nombre_libre',
     ];
 
     protected $casts = [

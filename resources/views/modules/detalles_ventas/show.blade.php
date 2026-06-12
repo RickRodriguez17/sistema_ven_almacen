@@ -42,7 +42,7 @@
               <tbody>
                 @foreach($venta->detalles as $d)
                   <tr>
-                    <td>{{ $d->producto?->nombre }}</td>
+                    <td>{{ $d->combo_id ? '[Combo] '.($d->combo?->nombre ?? '—') : ($d->producto?->nombre ?? ($d->nombre_libre ? '[Libre] '.$d->nombre_libre : '—')) }}</td>
                     <td class="text-center">{{ $d->cantidad }}</td>
                     <td class="text-end">{{ number_format($d->precio_unitario, 2) }}</td>
                     <td class="text-end">{{ number_format($d->subtotal, 2) }}</td>

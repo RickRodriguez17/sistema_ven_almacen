@@ -23,6 +23,16 @@ class CierresCaja extends Controller
 
         $cierres = $query->paginate(20);
 
+        // Para cierres abiertos, computar totales en tiempo real
+        foreach ($cierres as $c) {
+            if ($c->estaAbierto()) {
+                $resumen = $c->calcularResumenEnVivo();
+                $c->total_ventas = $resumen['total_ventas'];
+                $c->cantidad_ventas = $resumen['cantidad_ventas'];
+                $c->total_gastos = $resumen['total_gastos'];
+            }
+        }
+
         $abierto = CierreCaja::abiertoDe($user->id);
 
         return view('modules.cierres.index', [
@@ -150,6 +160,17 @@ class CierresCaja extends Controller
 
         $anuladas = $ventas->where('estado', Venta::ESTADO_ANULADA)->values();
         $gastos = $cierre->gastos()->with('user')->latest()->get();
+
+        // Para turnos abiertos, calcular el resumen en tiempo real
+        if ($cierre->estaAbierto()) {
+            $resumen = $cierre->calcularResumenEnVivo();
+            $cierre->total_ventas = $resumen['total_ventas'];
+            $cierre->cantidad_ventas = $resumen['cantidad_ventas'];
+            $cierre->total_efectivo = $resumen['total_efectivo'];
+            $cierre->total_tarjeta = $resumen['total_tarjeta'];
+            $cierre->total_yape = $resumen['total_yape'];
+            $cierre->total_gastos = $resumen['total_gastos'];
+        }
 
         return view('modules.cierres.show', [
             'titulo' => 'Cierre #'.str_pad($cierre->id, 5, '0', STR_PAD_LEFT),

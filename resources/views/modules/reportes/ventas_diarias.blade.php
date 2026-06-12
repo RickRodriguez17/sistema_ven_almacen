@@ -44,19 +44,35 @@
 
         <div class="table-responsive">
           <table class="table table-sm table-hover">
-            <thead><tr><th>Ticket</th><th>Hora</th><th>Cajero</th><th>Items</th><th>Método</th><th class="text-end">Total</th></tr></thead>
+            <thead><tr><th>Ticket</th><th>Hora</th><th>Cajero</th><th>Estado</th><th>Items</th><th>Método</th><th class="text-end">Total</th></tr></thead>
             <tbody>
               @forelse($ventas as $v)
-                <tr>
+                @php $anul = $v->estado === 'anulada'; @endphp
+                <tr class="{{ $anul ? 'table-danger text-muted' : '' }}">
                   <td><a href="{{ route('detalle-venta.show', $v->id) }}">#{{ $v->numero_ticket }}</a></td>
                   <td>{{ $v->created_at->format('H:i') }}</td>
                   <td>{{ $v->user->name ?? '—' }}</td>
+                  <td>
+                    @if($anul)
+                      <span class="badge bg-danger">Anulada</span>
+                    @elseif($v->estado === 'pendiente')
+                      <span class="badge bg-warning text-dark">Pendiente</span>
+                    @else
+                      <span class="badge bg-success">Pagada</span>
+                    @endif
+                  </td>
                   <td>{{ $v->detalles->sum('cantidad') }}</td>
                   <td><span class="badge bg-light text-dark">{{ ucfirst($v->metodo_pago) }}</span></td>
-                  <td class="text-end">{{ $negocio['moneda'] }} {{ number_format($v->total_venta, 2) }}</td>
+                  <td class="text-end">
+                    @if($anul)
+                      <s>{{ $negocio['moneda'] }} {{ number_format($v->total_venta, 2) }}</s>
+                    @else
+                      {{ $negocio['moneda'] }} {{ number_format($v->total_venta, 2) }}
+                    @endif
+                  </td>
                 </tr>
               @empty
-                <tr><td colspan="6" class="text-center text-muted py-3">Sin ventas en esta fecha.</td></tr>
+                <tr><td colspan="7" class="text-center text-muted py-3">Sin ventas en esta fecha.</td></tr>
               @endforelse
             </tbody>
           </table>

@@ -200,6 +200,7 @@
 
       </div>
 
+      @if(!auth()->user()->esCajero())
       <div class="col-xxl-3 col-md-6">
 
         <div class="card info-card customers-card">
@@ -232,6 +233,7 @@
         </div>
 
       </div>
+      @endif
 
       <div class="col-xxl-3 col-md-6">
 
@@ -294,22 +296,22 @@
           <div class="card-body">
 
             <h5 class="card-title">
-              Top productos vendidos
+              Productos Vendidos Hoy
             </h5>
 
             @if($topProductos->isEmpty())
 
               <p class="text-muted small">
-                Aún no hay ventas registradas.
+                Aún no hay ventas registradas hoy.
               </p>
 
             @else
 
-              <ol class="list-group list-group-numbered">
+              <ol class="list-group list-group-numbered" id="listProductosHoy">
 
-                @foreach($topProductos as $tp)
+                @foreach($topProductos as $idx => $tp)
 
-                  <li class="list-group-item d-flex justify-content-between align-items-start">
+                  <li class="list-group-item d-flex justify-content-between align-items-start {{ $idx >= 10 ? 'd-none productos-extra' : '' }}">
 
                     <div class="ms-2 me-auto">
 
@@ -333,6 +335,12 @@
                 @endforeach
 
               </ol>
+
+              @if($topProductos->count() > 10)
+                <button type="button" class="btn btn-sm btn-link mt-2 w-100" id="btnVerMasProductos">
+                  <i class="bi bi-chevron-down"></i> Ver todos ({{ $topProductos->count() }})
+                </button>
+              @endif
 
             @endif
 
@@ -437,6 +445,17 @@ document.addEventListener('DOMContentLoaded', () => {
     actualizarFechaHora();
 
     setInterval(actualizarFechaHora, 1000);
+
+    const btnVerMas = document.getElementById('btnVerMasProductos');
+    if (btnVerMas) {
+        btnVerMas.addEventListener('click', function() {
+            document.querySelectorAll('.productos-extra').forEach(el => el.classList.toggle('d-none'));
+            const expanded = !document.querySelector('.productos-extra.d-none');
+            this.innerHTML = expanded
+                ? '<i class="bi bi-chevron-up"></i> Ver menos'
+                : '<i class="bi bi-chevron-down"></i> Ver todos ({{ $topProductos->count() }})';
+        });
+    }
 
     const data = @json($ventasUltimos7Dias);
 
