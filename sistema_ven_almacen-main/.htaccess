@@ -1,0 +1,14 @@
+# ============================================================
+# Redirección a la carpeta /public (Laravel) cuando el hosting
+# no permite cambiar el document root.
+#
+# Si el hosting permite apuntar el document root directamente
+# a la carpeta /public, este archivo no es necesario.
+# ============================================================
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Reescribe TODAS las peticiones al front controller de Laravel.
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
