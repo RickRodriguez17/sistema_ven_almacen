@@ -36,7 +36,7 @@
   <table>
     <tr class="b"><td>Cant</td><td>Producto</td><td class="right">P.U.</td><td class="right">Subt</td></tr>
     @foreach($venta->detalles as $d)
-      @php $nom = $d->combo_id ? '[C] '.$d->combo?->nombre : $d->producto?->nombre; @endphp
+      @php $nom = $d->combo_id ? '[C] '.$d->combo?->nombre : ($d->producto?->nombre ?? ($d->nombre_libre ? '[L] '.$d->nombre_libre : '—')); @endphp
       <tr>
         <td>{{ $d->cantidad }}</td>
         <td>{{ Str::limit($nom ?? '—', 18) }}</td>

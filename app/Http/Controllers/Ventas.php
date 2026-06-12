@@ -515,6 +515,102 @@ class Ventas extends Controller
         $venta->cambio = round($totalCambio, 2);
     }
 
+    public function ventaLibre()
+    {
+        $titulo = 'Venta Libre';
+        $turnoAbierto = CierreCaja::abiertoDe(Auth::id());
+        $clientes = Cliente::orderBy('nombre')->get();
+
+        return view('modules.ventas.venta_libre', compact('titulo', 'turnoAbierto', 'clientes'));
+    }
+
+    public function storeVentaLibre(Request $request)
+    {
+        $data = $request->validate([
+            'cliente_id' => ['nullable', 'exists:clientes,id'],
+            'nombre_cliente_libre' => ['nullable', 'string', 'max:120'],
+            'notas' => ['nullable', 'string', 'max:500'],
+            'metodo_pago' => ['nullable', Rule::in(PagoVenta::METODOS)],
+            'efectivo_recibido' => ['nullable', 'numeric', 'min:0'],
+            'pagos' => ['nullable', 'array'],
+            'pagos.*.metodo_pago' => ['required_with:pagos', Rule::in(PagoVenta::METODOS)],
+            'pagos.*.monto' => ['required_with:pagos', 'numeric', 'min:0.01'],
+            'pagos.*.efectivo_recibido' => ['nullable', 'numeric', 'min:0'],
+            'pagos.*.referencia' => ['nullable', 'string', 'max:100'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.nombre' => ['required', 'string', 'max:200'],
+            'items.*.cantidad' => ['required', 'integer', 'min:1'],
+            'items.*.precio_unitario' => ['required', 'numeric', 'min:0.01'],
+        ]);
+
+        $turno = $this->requerirTurnoAbierto();
+        if (! $turno instanceof CierreCaja) {
+            return $turno;
+        }
+
+        try {
+            $venta = DB::transaction(function () use ($data, $turno) {
+                $total = 0.0;
+
+                $venta = Venta::create([
+                    'user_id' => Auth::id(),
+                    'cierre_caja_id' => $turno->id,
+                    'cliente_id' => $data['cliente_id'] ?? null,
+                    'numero_ticket' => $this->generarNumeroTicket(),
+                    'metodo_pago' => $data['metodo_pago'] ?? 'efectivo',
+                    'efectivo_recibido' => 0,
+                    'cambio' => 0,
+                    'total_venta' => 0,
+                    'tipo_pedido' => Venta::TIPO_LLEVAR,
+                    'estado' => Venta::ESTADO_PAGADA,
+                    'notas' => $data['notas'] ?? null,
+                    'nombre_cliente_libre' => $data['nombre_cliente_libre'] ?? null,
+                ]);
+
+                foreach ($data['items'] as $item) {
+                    $subtotal = round((float) $item['precio_unitario'] * (int) $item['cantidad'], 2);
+                    DetalleVenta::create([
+                        'venta_id' => $venta->id,
+                        'cantidad' => (int) $item['cantidad'],
+                        'precio_unitario' => (float) $item['precio_unitario'],
+                        'subtotal' => $subtotal,
+                        'nombre_libre' => $item['nombre'],
+                    ]);
+                    $total += $subtotal;
+                }
+
+                $venta->total_venta = round($total, 2);
+
+                $this->registrarPagos(
+                    $venta,
+                    $data['pagos'] ?? null,
+                    $venta->total_venta,
+                    $data['metodo_pago'] ?? 'efectivo',
+                    $data['efectivo_recibido'] ?? null,
+                );
+
+                $venta->save();
+
+                return $venta;
+            });
+
+            return response()->json([
+                'ok' => true,
+                'venta_id' => $venta->id,
+                'numero_ticket' => $venta->numero_ticket,
+                'total' => $venta->total_venta,
+                'cambio' => $venta->cambio,
+                'ticket_url' => route('ventas.ticket', $venta->id),
+                'pdf_url' => route('ventas.ticket.pdf', $venta->id),
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'ok' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
     protected function generarNumeroTicket(): string
     {
         $fecha = now()->format('Ymd');

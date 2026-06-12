@@ -22,6 +22,7 @@
       </a>
       <ul id="ventas-nav" class="nav-content collapse {{ request()->is('ventas*') || request()->is('detalle*') || request()->is('cierres*') || request()->is('gastos*') ? 'show' : '' }}" data-bs-parent="#sidebar-nav">
         <li><a href="{{ route('ventas-nueva') }}" class="{{ request()->routeIs('ventas-nueva') ? 'active' : '' }}"><i class="bi bi-cash-coin"></i><span>Nueva Venta (POS)</span></a></li>
+        <li><a href="{{ route('ventas.libre') }}" class="{{ request()->routeIs('ventas.libre') ? 'active' : '' }}"><i class="bi bi-pencil-square"></i><span>Venta Libre</span></a></li>
         <li><a href="{{ route('ventas.pendientes') }}" class="{{ request()->routeIs('ventas.pendientes') ? 'active' : '' }}"><i class="bi bi-hourglass-split"></i><span>Pedidos pendientes</span></a></li>
         <li><a href="{{ route('detalle-venta') }}" class="{{ request()->routeIs('detalle-venta') ? 'active' : '' }}"><i class="bi bi-receipt"></i><span>Historial de Ventas</span></a></li>
         <li><a href="{{ route('gastos') }}" class="{{ request()->routeIs('gastos*') ? 'active' : '' }}"><i class="bi bi-wallet2"></i><span>Gastos urgentes</span></a></li>

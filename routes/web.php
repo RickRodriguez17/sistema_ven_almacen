@@ -33,6 +33,8 @@ Route::middleware(['auth', 'rol'])->group(function () {
             Route::post('/{id}/cobrar', [Ventas::class, 'cobrar'])->name('ventas.cobrar');
             Route::post('/{id}/anular', [Ventas::class, 'anular'])->name('ventas.anular');
             Route::get('/ticket/{id}', [Ventas::class, 'ticket'])->name('ventas.ticket');
+            Route::get('/libre', [Ventas::class, 'ventaLibre'])->name('ventas.libre');
+            Route::post('/libre/store', [Ventas::class, 'storeVentaLibre'])->name('ventas.libre.store');
             Route::get('/ticket/{id}/doble', [Ventas::class, 'ticketDoble'])->name('ventas.ticket.doble');
             Route::get('/ticket/{id}/pdf', [Ventas::class, 'ticketPdf'])->name('ventas.ticket.pdf');
         });

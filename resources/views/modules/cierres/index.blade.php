@@ -70,7 +70,7 @@
                   @endif
                 </td>
                 <td>
-                  <a href="{{ route('cierres.show', $c->id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
+                  <a href="{{ route('cierres.show', $c->id) }}" class="btn btn-sm btn-outline-primary" title="{{ $c->estado === 'abierto' ? 'Ver avance del turno' : 'Ver detalle' }}"><i class="bi bi-eye"></i>{{ $c->estado === 'abierto' ? ' Avance' : '' }}</a>
                   @if(auth()->user()->puedeImprimirReportes() && $c->estado === 'cerrado')
                     <a href="{{ route('cierres.pdf', $c->id) }}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="bi bi-printer"></i></a>
                   @endif
