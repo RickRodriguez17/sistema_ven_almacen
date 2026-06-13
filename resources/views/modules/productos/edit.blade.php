@@ -11,7 +11,7 @@
       <div class="card-body">
         <h5 class="card-title">Datos del producto</h5>
 
-        <form action="{{ route('productos.update', $item->id) }}" method="POST" class="row g-3">
+        <form action="{{ route('productos.update', $item->id) }}" method="POST" enctype="multipart/form-data" class="row g-3">
           @csrf @method('PUT')
 
           <div class="col-md-6">
@@ -45,6 +45,18 @@
           <div class="col-md-4">
             <label class="form-label">Precio venta *</label>
             <input type="number" step="0.01" min="0" name="precio_venta" class="form-control" required value="{{ old('precio_venta', $item->precio_venta) }}">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Imagen del producto</label>
+            @if($item->imagen)
+              <div class="mb-2">
+                <img src="{{ asset('storage/'.$item->imagen->ruta) }}" alt="{{ $item->nombre }}" class="img-thumbnail" style="max-height:120px;">
+                <small class="d-block text-muted">Imagen actual. Sube una nueva para reemplazarla.</small>
+              </div>
+            @endif
+            <input type="file" name="imagen" class="form-control" accept="image/jpeg,image/png,image/webp">
+            <small class="text-muted">JPG, PNG o WebP. Máximo 4 MB.</small>
           </div>
 
           <div class="col-12 alert alert-info small mb-0">

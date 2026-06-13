@@ -109,7 +109,7 @@ class Productos extends Controller
     {
         $titulo = 'Editar producto';
         $categorias = Categoria::orderBy('nombre')->get();
-        $item = Producto::findOrFail($id);
+        $item = Producto::with('imagen')->findOrFail($id);
 
         return view('modules.productos.edit', compact('titulo', 'item', 'categorias'));
     }
@@ -126,10 +126,25 @@ class Productos extends Controller
             'stock_minimo' => ['nullable', 'integer', 'min:0'],
             'precio_compra' => ['nullable', 'numeric', 'min:0'],
             'precio_venta' => ['required', 'numeric', 'min:0'],
+            'imagen' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:4096'],
         ]);
 
         try {
-            $producto->update($data);
+            DB::transaction(function () use ($request, $producto, $data) {
+                unset($data['imagen']);
+                $producto->update($data);
+
+                if ($request->hasFile('imagen')) {
+                    $imgAnterior = $producto->imagen;
+                    if ($imgAnterior) {
+                        if ($imgAnterior->ruta && Storage::disk('public')->exists($imgAnterior->ruta)) {
+                            Storage::disk('public')->delete($imgAnterior->ruta);
+                        }
+                        $imgAnterior->delete();
+                    }
+                    $this->subirImagen($request, $producto->id);
+                }
+            });
 
             return to_route('productos')->with('success', 'Producto actualizado exitosamente.');
         } catch (\Throwable $th) {
