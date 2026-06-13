@@ -43,7 +43,7 @@ class Dashboard extends Controller
                 DB::raw('SUM(detalle_venta.cantidad) as total_vendido'),
                 DB::raw('SUM(detalle_venta.subtotal) as total_ingreso')
             )
-            ->groupBy('nombre')
+            ->groupBy(DB::raw("COALESCE(productos.nombre, detalle_venta.nombre_libre, 'Producto')"))
             ->orderByDesc('total_vendido')
             ->get();
 

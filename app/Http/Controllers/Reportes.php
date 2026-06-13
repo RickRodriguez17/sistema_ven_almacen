@@ -109,7 +109,11 @@ class Reportes extends Controller
                 DB::raw('SUM(detalle_venta.cantidad) as total_unidades'),
                 DB::raw('SUM(detalle_venta.subtotal) as total_ingreso')
             )
-            ->groupBy('id', 'nombre', 'categoria')
+            ->groupBy(
+                DB::raw('COALESCE(productos.id, 0)'),
+                DB::raw("COALESCE(productos.nombre, detalle_venta.nombre_libre, 'Producto libre')"),
+                DB::raw("COALESCE(categorias.nombre, IF(detalle_venta.nombre_libre IS NOT NULL, 'Venta Libre', NULL))")
+            )
             ->orderByDesc('total_unidades');
 
         if ($categoriaId) {
@@ -269,7 +273,10 @@ class Reportes extends Controller
                         DB::raw('SUM(detalle_venta.cantidad) as total_unidades'),
                         DB::raw('SUM(detalle_venta.subtotal) as total_ingreso')
                     )
-                    ->groupBy('nombre', 'categoria')
+                    ->groupBy(
+                        DB::raw("COALESCE(productos.nombre, detalle_venta.nombre_libre, 'Producto libre')"),
+                        DB::raw("COALESCE(categorias.nombre, IF(detalle_venta.nombre_libre IS NOT NULL, 'Venta Libre', NULL))")
+                    )
                     ->orderByDesc('total_unidades')
                     ->get();
                 $data += [
